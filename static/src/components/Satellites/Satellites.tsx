@@ -1,34 +1,9 @@
-
 import { useState, useEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
 
-import type { ThreeEvent } from '@react-three/fiber';
+import type {SatRec} from './types.d.ts';
 
-interface SatRec {
-  name: string; // Common name
-  satnum: string; // NORAD identifier
-  // Position vector (ECI)
-  r: {
-    X: number;
-    Y: number;
-    Z: number;
-  };
-  // Veclocity vector (ECI)
-  v: {
-    X: number;
-    Y: number;
-    Z: number;
-  };
-  altitude: number,
-  // Unit angular velocity
-  w: {
-    X: number;
-    Y: number;
-    Z: number;
-  };
-  // Angular speed
-  speed: number;
-};
+import type { ThreeEvent } from '@react-three/fiber';
 
 type SatellitesProps = {
   scale: number;
