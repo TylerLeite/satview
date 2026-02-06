@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
+
+import * as THREE from 'three';
+
 import orbitShaderCode from '../../shaders/orbit.wgsl?raw';
-import type {SatRec} from './types.d.ts';
+
+import type { RefObject } from 'react';
+import type { SatRec } from './types.d.ts';
+
+const STAGING_POOL_SZ = 3;
 
 interface GPURef {
     device: GPUDevice;
@@ -8,7 +15,8 @@ interface GPURef {
     bindGroup: GPUBindGroup;
     satBuf: GPUBuffer;
     uniformBuf: GPUBuffer;
-    computeOutputBuf: GPUBuffer;
+    stagingPool: Array<GPUBuffer>;
+    stagingFrame: number;
     nSat: number; // number of satellites
 }
 
@@ -17,6 +25,7 @@ export function useGPUSimulation(
     enabled: boolean = true,
     scale: number = 1,
     speedMultiplier: number,
+    vertexBufferRef: RefObject<THREE.BufferAttribute>,
 ) {
     const [positions, setPositions] = useState<Float32Array | null>(null);
     const gpuRef = useRef<GPURef | null>(null);
@@ -86,10 +95,18 @@ export function useGPUSimulation(
                 usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
 
-            const computeOutputBuf = device.createBuffer({
-                size: satData.byteLength,
-                usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-            });
+            const stagingFrame = 0;
+            const stagingPool = Array.from({ length: STAGING_POOL_SZ }, () =>
+                device.createBuffer({
+                    size: satData.byteLength,
+                    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+                })
+            );
+
+            // const computeOutputBuf = device.createBuffer({
+            //     size: satData.byteLength,
+            //     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+            // });
 
             const pipeline = device.createComputePipeline({
                 layout: 'auto',
@@ -118,7 +135,8 @@ export function useGPUSimulation(
                     bindGroup,
                     satBuf,
                     uniformBuf,
-                    computeOutputBuf,
+                    stagingPool,
+                    stagingFrame,
                     nSat,
                 };
 
@@ -143,17 +161,18 @@ export function useGPUSimulation(
             if (gpuRef.current) {
                 gpuRef.current.satBuf.destroy();
                 gpuRef.current.uniformBuf.destroy();
-                gpuRef.current.computeOutputBuf.destroy();
+                gpuRef.current.stagingPool.forEach(buf => buf.destroy());
+                // gpuRef.current.computeOutputBuf.destroy();
                 gpuRef.current = null;
             }
         };
     }, [satellites, mounted, enabled, speedMultiplier]);
 
     const step = async(dt: number) => {
+        
         const gpu = gpuRef.current;
-        if (!gpu) { return; }
-        if (isComputing) { return; }
-
+        if (!gpu || isComputing) { return; }
+        
         setIsComputing(true);
 
         const uniformData = new Float32Array([dt, gpu.nSat, 0, 0]);
@@ -169,25 +188,32 @@ export function useGPUSimulation(
         passEncoder.dispatchWorkgroups(nWGs);
         passEncoder.end();
 
+        const computeOutputBuf = gpu.stagingPool[gpu.stagingFrame++ % STAGING_POOL_SZ]
         commandEncoder.copyBufferToBuffer(
             gpu.satBuf,
-            gpu.computeOutputBuf,
+            computeOutputBuf,
         );
         
         gpu.device.queue.submit([commandEncoder.finish()]);
-        await gpu.computeOutputBuf.mapAsync(GPUMapMode.READ);
-        const res = new Float32Array(gpu.computeOutputBuf.getMappedRange()).slice();
-        gpu.computeOutputBuf.unmap();
+        // await computeOutputBuf.mapAsync(GPUMapMode.READ);
 
-        const newRs = new Float32Array(gpu.nSat*3);
-        for (let i = 0; i < gpu.nSat; i++) {
-            newRs[i*3 + 0] = res[i*8 + 0] * scale;
-            newRs[i*3 + 1] = res[i*8 + 1] * scale;
-            newRs[i*3 + 2] = res[i*8 + 2] * scale;
-        }
+        computeOutputBuf.mapAsync(GPUMapMode.READ).then(() => {
+            const res = new Float32Array(computeOutputBuf.getMappedRange()).slice();
+            if (vertexBufferRef && vertexBufferRef.current) {
+                const vAttr = vertexBufferRef.current;
+                const newRs = vAttr.array as Float32Array;
+                for (let i = 0; i < gpu.nSat; i++) {
+                    newRs[i * 3 + 0] = res[i * 8 + 0] * scale;
+                    newRs[i * 3 + 1] = res[i * 8 + 1] * scale;
+                    newRs[i * 3 + 2] = res[i * 8 + 2] * scale;
+                }
 
-        setPositions(newRs);
-        gpu.device.queue.writeBuffer(gpu.satBuf, 0, res);
+                vAttr.needsUpdate = true;
+            }
+
+            computeOutputBuf.unmap();
+            gpu.device.queue.writeBuffer(gpu.satBuf, 0, res);
+        });
 
         setIsComputing(false);
     };

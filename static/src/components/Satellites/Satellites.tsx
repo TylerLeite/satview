@@ -19,8 +19,10 @@ const Satellites: React.FC<SatellitesProps> = ({ scale, enableGPU, speedMultipli
         speedMultiplier = 1;
     }
 
+    const vertexBufferRef = useRef<THREE.BufferAttribute>(null!);
     const [satRecs, setSatRecs] = useState<Array<SatRec>>([]);
-    const { positions, step, ready } = useGPUSimulation(satRecs, enableGPU, scale, speedMultiplier | 1);
+    const { positions, step, ready } = useGPUSimulation(satRecs, enableGPU, scale, speedMultiplier | 1, vertexBufferRef);
+
 
     useEffect(() => {
         fetch("/satellites.json").then(res => res.json()).then(
@@ -99,9 +101,11 @@ const Satellites: React.FC<SatellitesProps> = ({ scale, enableGPU, speedMultipli
         >
             <bufferGeometry>
                 <bufferAttribute
+                    ref={vertexBufferRef}
                     attach="attributes-position"
                     count={positions.length / 3}
                     args={[positions, 3]}
+                    usage={THREE.DynamicDrawUsage}
                 ></bufferAttribute>
                 <bufferAttribute
                     ref={hoveredRef}
