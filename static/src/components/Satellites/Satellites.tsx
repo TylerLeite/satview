@@ -1,16 +1,37 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+
 import * as THREE from 'three';
 
-import type {SatRec} from './types.d.ts';
+import { useGPUSimulation } from './simulate.ts';
 
+import type {SatRec} from './types.d.ts';
 import type { ThreeEvent } from '@react-three/fiber';
 
 type SatellitesProps = {
-  scale: number;
+    scale: number;
+    enableGPU?: boolean;
+    speedMultiplier?: number;
 };
 
-const Satellites: React.FC<SatellitesProps> = ({ scale }) => {
-    const [positions, setPositions] = useState<Float32Array | null>(null);
+const Satellites: React.FC<SatellitesProps> = ({ scale, enableGPU, speedMultiplier }) => {
+    if (typeof speedMultiplier === "undefined") {
+        speedMultiplier = 1;
+    }
+
+    const [satRecs, setSatRecs] = useState<Array<SatRec>>([]);
+    const { positions, step, ready } = useGPUSimulation(satRecs, enableGPU, scale, speedMultiplier | 1);
+
+    useEffect(() => {
+        fetch("/satellites.json").then(res => res.json()).then(
+            (data: Array<SatRec>) => { setSatRecs(data); }
+        );
+    }, []);
+
+    useFrame((_, delta) => {
+        if (!ready) { return; }
+        step(delta);
+    });
 
     const hoveredRef = useRef<THREE.BufferAttribute>(null!);
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -28,22 +49,8 @@ const Satellites: React.FC<SatellitesProps> = ({ scale }) => {
         colors.current = _colors;
     }, [_colors]);
 
-    useEffect(() => {
-        fetch("/satellites.json").then(res => res.json()).then(
-            (data: Array<SatRec>) => {
-                const buf = new Float32Array(data.length * 3);
-                data.forEach((sat, i) => {
-                    buf[i * 3] = sat.r.X * scale;
-                    buf[i * 3 + 1] = sat.r.Y * scale;
-                    buf[i * 3 + 2] = sat.r.Z * scale;
-                });
-
-                setPositions(buf);
-            }
-        )
-    }, [scale]);
-
-    if (!positions) { return null; } // TODO: As of now, loading happens quickly enough that this is fine
+    // TODO: As of now, loading happens quickly enough that this is fine
+    if (!positions) { return null; } 
 
     const updateHover = (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();

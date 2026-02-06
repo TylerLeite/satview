@@ -5,7 +5,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useTexture, OrbitControls } from '@react-three/drei';
 
-import Satellites from './components/Satellites';
+import Satellites from './components/Satellites/Satellites';
 
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -15,6 +15,8 @@ const SCALE = EARTH_RADIUS_VIRTUAL / EARTH_RADIUS_ACTUAL;
 
 const MIN_DISTANCE = 13;
 const THRESHOLD = 0.02;
+
+const SPEED_MULTIPLIER = 10;
 
 
 type SceneProps = {
@@ -27,7 +29,7 @@ const Scene: React.FC<SceneProps> = ({ setThreshold  }) => {
   const earthRef = useRef<THREE.Mesh>(null!);
   useFrame((_, delta) => {
     const speed = Math.PI*2/(24*60*60) // rad / s
-    earthRef.current.rotation.y += speed*delta;
+    earthRef.current.rotation.y += speed * delta * SPEED_MULTIPLIER;
   });
   
   return (
@@ -36,10 +38,10 @@ const Scene: React.FC<SceneProps> = ({ setThreshold  }) => {
       <pointLight position={[10, 10, 10]} />
       <group rotation={[-Math.PI / 2, 0, 23.5 / 360 * 2 * Math.PI]}>
         <mesh ref={earthRef} rotation={[Math.PI / 2, 0, 0]}>
-          <sphereGeometry args={[EARTH_RADIUS_VIRTUAL,64,64]} />
+          <sphereGeometry args={[EARTH_RADIUS_VIRTUAL, 64, 64]} />
           <meshStandardMaterial map={texture} />
         </mesh>
-        <Satellites scale={SCALE}></Satellites>
+        <Satellites scale={SCALE} speedMultiplier={SPEED_MULTIPLIER}></Satellites>
       </group>
       <OrbitControls
         minDistance={MIN_DISTANCE}

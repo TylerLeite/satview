@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import orbitShaderCode from '../shaders/orbit.wgsl?raw';
+import orbitShaderCode from '../../shaders/orbit.wgsl?raw';
 import type {SatRec} from './types.d.ts';
 
 interface GPURef {
@@ -14,16 +14,18 @@ interface GPURef {
 
 export function useGPUSimulation(
     satellites: Array<SatRec>,
-    enabled: boolean = true
+    enabled: boolean = true,
+    scale: number = 1,
+    speedMultiplier: number,
 ) {
     const [positions, setPositions] = useState<Float32Array | null>(null);
     const gpuRef = useRef<GPURef | null>(null);
 
-    const _mounted = true;
-    const mounted = useRef<boolean>(_mounted);
+    const [mounted, setMounted] = useState<boolean>(true);
     
-    const _ready = false;
-    const ready = useRef<boolean>(_ready);
+    const [ready, setReady] = useState<boolean>(false);
+
+    const [isComputing, setIsComputing] = useState<boolean>(false);
 
     useEffect(() => {
         if (!enabled || satellites.length === 0) { return; }
@@ -41,7 +43,7 @@ export function useGPUSimulation(
             }
 
             const device = await adapter.requestDevice();
-            if (!mounted.current) { return; }
+            if (!mounted) { return; }
 
             const shaderModule = device.createShaderModule({
                 code: orbitShaderCode,
@@ -67,7 +69,7 @@ export function useGPUSimulation(
                 satData[i + 6] = sat.w.Z;
 
                 // angular speed
-                satData[i + 7] = sat.speed;
+                satData[i + 7] = sat.speed * speedMultiplier;
             });
 
             const satBuf = device.createBuffer({
@@ -109,7 +111,7 @@ export function useGPUSimulation(
                 }]
             });
 
-            if (mounted.current) {
+            if (mounted) {
                 gpuRef.current = {
                     device,
                     pipeline,
@@ -130,12 +132,14 @@ export function useGPUSimulation(
 
                 setPositions(R_0s);
             }
+
+            setReady(true);
         }
 
         initGPU();
 
         return () => {
-            mounted.current = false;
+            setMounted(false);
             if (gpuRef.current) {
                 gpuRef.current.satBuf.destroy();
                 gpuRef.current.uniformBuf.destroy();
@@ -143,18 +147,14 @@ export function useGPUSimulation(
                 gpuRef.current = null;
             }
         };
-    }, [satellites, enabled]);
+    }, [satellites, mounted, enabled, speedMultiplier]);
 
     const step = async(dt: number) => {
         const gpu = gpuRef.current;
-        if (!gpu) { 
-            ready.current = false;
-            return; 
-        }
+        if (!gpu) { return; }
+        if (isComputing) { return; }
 
-        if (!ready.current) {
-            ready.current = true;
-        }
+        setIsComputing(true);
 
         const uniformData = new Float32Array([dt, gpu.nSat, 0, 0]);
         gpu.device.queue.writeBuffer(gpu.uniformBuf, 0, uniformData);
@@ -172,7 +172,6 @@ export function useGPUSimulation(
         commandEncoder.copyBufferToBuffer(
             gpu.satBuf,
             gpu.computeOutputBuf,
-            gpu.satBuf.size,
         );
         
         gpu.device.queue.submit([commandEncoder.finish()]);
@@ -182,13 +181,15 @@ export function useGPUSimulation(
 
         const newRs = new Float32Array(gpu.nSat*3);
         for (let i = 0; i < gpu.nSat; i++) {
-            newRs[i*3 + 0] = res[i*8 + 0];
-            newRs[i*3 + 1] = res[i*8 + 1];
-            newRs[i*3 + 2] = res[i*8 + 2];
+            newRs[i*3 + 0] = res[i*8 + 0] * scale;
+            newRs[i*3 + 1] = res[i*8 + 1] * scale;
+            newRs[i*3 + 2] = res[i*8 + 2] * scale;
         }
 
         setPositions(newRs);
         gpu.device.queue.writeBuffer(gpu.satBuf, 0, res);
+
+        setIsComputing(false);
     };
 
     return {

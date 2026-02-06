@@ -20,7 +20,7 @@ fn rotate(v: vec3<f32>, k: vec3<f32>, theta: f32) -> vec3<f32> {
     let sinT = sin(theta);
 
     let kv = dot(k,v);
-    let kxv = cross(k,v)
+    let kxv = cross(k,v);
 
     return v*cosT + kxv*sinT + k*kv*(1.0-cosT);
 }
@@ -31,9 +31,9 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 
     if (i >= uniforms.nSat) { return; }
 
-    let satellite = satellites[i]
+    let satellite = satellites[i];
     let theta = satellite.w * uniforms.dt;
-    let R_new = rotate(satellite.R, satellite.k_hat, theta)
+    let R_new = rotate(satellite.R, satellite.k_hat, theta);
 
-    satellites[i].R = R_new
+    satellites[i].R = R_new;
 }
