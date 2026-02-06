@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useTexture, OrbitControls } from '@react-three/drei';
+import { useControls } from 'leva'
 
 import Satellites from './components/Satellites/Satellites';
 
@@ -16,20 +17,21 @@ const SCALE = EARTH_RADIUS_VIRTUAL / EARTH_RADIUS_ACTUAL;
 const MIN_DISTANCE = 13;
 const THRESHOLD = 0.02;
 
-const SPEED_MULTIPLIER = 1000;
+// const SPEED_MULTIPLIER = 1000;
 
 
 type SceneProps = {
   setThreshold: Dispatch<SetStateAction<number>>;
+  speedMultiplier: number
 }
-const Scene: React.FC<SceneProps> = ({ setThreshold  }) => {
+const Scene: React.FC<SceneProps> = ({ setThreshold, speedMultiplier }) => {
   const texture = useTexture('/earth.png');
 
   // NOTE: a day is long, this rotation will hardly be noticeable. but it makes me feel better to include it
   const earthRef = useRef<THREE.Mesh>(null!);
   useFrame((_, delta) => {
     const speed = Math.PI*2/(24*60*60) // rad / s
-    earthRef.current.rotation.y += speed * delta * SPEED_MULTIPLIER;
+    earthRef.current.rotation.y += speed * delta * speedMultiplier;
   });
   
   return (
@@ -41,7 +43,7 @@ const Scene: React.FC<SceneProps> = ({ setThreshold  }) => {
           <sphereGeometry args={[EARTH_RADIUS_VIRTUAL, 64, 64]} />
           <meshStandardMaterial map={texture} />
         </mesh>
-        <Satellites scale={SCALE} speedMultiplier={SPEED_MULTIPLIER}></Satellites>
+        <Satellites scale={SCALE} speedMultiplier={speedMultiplier}></Satellites>
       </group>
       <OrbitControls
         minDistance={MIN_DISTANCE}
@@ -59,6 +61,7 @@ const Scene: React.FC<SceneProps> = ({ setThreshold  }) => {
 
 function App() {
   const [threshold, setThreshold] = useState(THRESHOLD);
+  const { speedMultiplier } = useControls({ speedMultiplier: 10 })
   return (
     <>
       <Canvas
@@ -69,7 +72,7 @@ function App() {
         camera={{ position: [0, 0, MIN_DISTANCE]}}
       >
         <color attach="background" args={["#111111"]}></color>
-        <Scene setThreshold={setThreshold}></Scene>
+        <Scene setThreshold={setThreshold} speedMultiplier={speedMultiplier}></Scene>
       </Canvas>
     </>
   )

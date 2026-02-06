@@ -78,7 +78,7 @@ export function useGPUSimulation(
                 satData[i + 6] = sat.w.Z;
 
                 // angular speed
-                satData[i + 7] = sat.speed * speedMultiplier;
+                satData[i + 7] = sat.speed;
             });
 
             const satBuf = device.createBuffer({
@@ -166,16 +166,15 @@ export function useGPUSimulation(
                 gpuRef.current = null;
             }
         };
-    }, [satellites, mounted, enabled, speedMultiplier]);
+    }, [satellites, mounted, enabled]);
 
     const step = async(dt: number) => {
-        
         const gpu = gpuRef.current;
         if (!gpu || isComputing) { return; }
         
         setIsComputing(true);
 
-        const uniformData = new Float32Array([dt, gpu.nSat, 0, 0]);
+        const uniformData = new Float32Array([dt, gpu.nSat, speedMultiplier, 0]);
         gpu.device.queue.writeBuffer(gpu.uniformBuf, 0, uniformData);
 
         const commandEncoder = gpu.device.createCommandEncoder();

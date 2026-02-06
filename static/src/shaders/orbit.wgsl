@@ -8,7 +8,8 @@ struct Satellite {
 struct Uniforms {
     dt: f32,
     nSat: u32, // number of satellites
-    _pad: vec2<f32>,
+    mult: f32, // speed multiplier
+    _pad: u32,
 }
 
 @group(0) @binding(0) var<storage, read_write> satellites: array<Satellite>;
@@ -32,7 +33,7 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     if (i >= uniforms.nSat) { return; }
 
     let satellite = satellites[i];
-    let theta = satellite.w * uniforms.dt;
+    let theta = satellite.w * uniforms.mult * uniforms.dt;
     let R_new = rotate(satellite.R, satellite.k_hat, theta);
 
     satellites[i].R = R_new;
