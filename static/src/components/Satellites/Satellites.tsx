@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useFrame } from '@react-three/fiber';
-
 import * as THREE from 'three';
 
 import { useGPUSimulation } from './simulate.ts';
+import { useDetailStore } from '../../stores/details.ts';
 
 import type {SatRec} from './types.d.ts';
 import type { ThreeEvent } from '@react-three/fiber';
@@ -14,21 +15,24 @@ type SatellitesProps = {
     speedMultiplier?: number;
 };
 
-const Satellites: React.FC<SatellitesProps> = ({ scale, enableGPU, speedMultiplier }) => {
+function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
     if (typeof speedMultiplier === "undefined") {
         speedMultiplier = 1;
     }
 
     const vertexBufferRef = useRef<THREE.BufferAttribute>(null!);
-    const [satRecs, setSatRecs] = useState<Array<SatRec>>([]);
-    const { positions, step, ready } = useGPUSimulation(satRecs, enableGPU, scale, speedMultiplier | 1, vertexBufferRef);
-
-
-    useEffect(() => {
-        fetch("/satellites.json").then(res => res.json()).then(
-            (data: Array<SatRec>) => { setSatRecs(data); }
-        );
-    }, []);
+    
+    const { data: satRecs, isLoading, isError } = useQuery<SatRec[]>({
+        queryKey: ['satellites'],
+        queryFn: async () => {
+            const res = await fetch('/satellites.json');
+            if (!res.ok) { throw new Error("Error fetching satellite 3les"); }
+            return res.json();
+        },
+        refetchInterval: 5000,
+    });
+    
+    const { positions, step, ready } = useGPUSimulation(satRecs || [], enableGPU, scale, speedMultiplier | 1, vertexBufferRef);
 
     useFrame((_, delta) => {
         if (!ready) { return; }
@@ -51,8 +55,11 @@ const Satellites: React.FC<SatellitesProps> = ({ scale, enableGPU, speedMultipli
         colors.current = _colors;
     }, [_colors]);
 
+    const selectSatellite = useDetailStore(s => s.select);
+
     // TODO: As of now, loading happens quickly enough that this is fine
-    if (!positions) { return null; } 
+    // TODO: Error state
+    if (isLoading || isError || !positions ) {return null}
 
     const updateHover = (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
@@ -87,16 +94,16 @@ const Satellites: React.FC<SatellitesProps> = ({ scale, enableGPU, speedMultipli
         setHoveredIdx(null);
     }
 
-    // const clickSatellite = (e: ThreeEvent<PointerEvent>) => {
-    //   // Select this guy
-    //   // publish a message that he was selected
-    //   // TODO: in hove/unhover logic, make sure it doesnt get unhighlighted if it is selected
-    // }
+    const clickSatellite = (e: ThreeEvent<PointerEvent>) => {
+        if (!e) { return; }
+        selectSatellite(typeof e.index == "undefined" ? -1 : e.index);
+        // TODO: in hove/unhover logic, make sure it doesnt get unhighlighted if it is selected
+    }
 
     return (
         <points
             onPointerMove={updateHover}
-            // onPointerDown={clickSatellite}
+            onPointerDown={clickSatellite}
             onPointerOut={unHover}
         >
             <bufferGeometry>

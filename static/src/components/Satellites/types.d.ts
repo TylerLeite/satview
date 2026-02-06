@@ -29,3 +29,36 @@ export interface SatData_GPU {
   k_hat: Float32Array;
   w: Float32;
 };
+
+export interface SatDetail {
+  commonName: string;
+  officialName: string;
+  country: string;
+  ownerCountry: string;
+  owner: string;
+  users: string;
+  purpose: string;
+  detailedPurpose: string;
+  orbitClass: string;
+  orbitType: string;
+  Omega: string;
+  r_p: string;
+  r_a: string;
+  e: string;
+  i: string;
+  T: string;
+  m_launch: string;
+  m_dry: string;
+  P: string;
+  t_0: string;
+  L: string;
+  contractor: string;
+  contractorCountry: string;
+  launchSite: string;
+  launchVehicle: string;
+  COSPAR: string;
+  NORAD: string;
+  comments: string;
+  dataSrc: string;
+  srcURLs: string[];
+};

@@ -1,4 +1,42 @@
 #root {
   width: 100vw;
   height: 100vh;
+
+  display: flex;
+  flex-flow: row nowrap;
+
+  overflow: hidden;
+}
+
+.left {
+  flex-grow: 1;
+}
+
+.header-toolbar {
+  height: 30px;
+  min-height: 30px;
+}
+
+.footer-toolbar {
+  height: 25px;
+  min-height: 25px;
+
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 12px;
+  padding: 0 15px;
+
+  background-color: #111;
+}
+
+.orbit-system {
+  height: calc(100vh - 30px - 25px - 2px);
+}
+
+.right {
+  padding: 0 15px;
+  padding-top: 30px;
+  width: 33vw;
 }

@@ -15,13 +15,13 @@ interface GPURef {
     bindGroup: GPUBindGroup;
     satBuf: GPUBuffer;
     uniformBuf: GPUBuffer;
-    stagingPool: Array<GPUBuffer>;
+    stagingPool: GPUBuffer[];
     stagingFrame: number;
     nSat: number; // number of satellites
 }
 
 export function useGPUSimulation(
-    satellites: Array<SatRec>,
+    satellites: SatRec[],
     enabled: boolean = true,
     scale: number = 1,
     speedMultiplier: number,
