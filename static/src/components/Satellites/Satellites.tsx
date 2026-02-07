@@ -53,6 +53,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
     if (isLoading || isError || !positions ) {return null}
 
     const updateHover = (e: ThreeEvent<PointerEvent>) => {
+        document.body.style.cursor = 'pointer';
         e.stopPropagation();
 
         if (e.index == null) { return; }
@@ -75,6 +76,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
     }
 
     const unHover = (e: ThreeEvent<PointerEvent>) => {
+        document.body.style.cursor = 'auto';
         if (e.index == null) { return; }
 
         colors.current[e.index * 3] = 1;

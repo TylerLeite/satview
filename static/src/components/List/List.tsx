@@ -29,6 +29,7 @@ export default function List() {
             {satDetails?.map((e: SatRec, i: number) => (
                 <span
                     key={e.satnum}
+                    className="clickable"
                     onClick={() => selectSatellite(i)}
                 >
                     <ListCard search={search_lower} {...e} />

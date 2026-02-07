@@ -1,6 +1,6 @@
 import './App.css';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -60,7 +60,14 @@ function Scene({ setThreshold }: SceneProps) {
         const d = e?.target.getDistance();
         if (!d) { return; }
         setDistance(d);
-        setThreshold(THRESHOLD * Math.sqrt(d/MIN_DISTANCE));
+
+        if (d > 150) {
+          setThreshold(5);
+        } else if (d > 100) {
+          setThreshold(1)
+        } else {
+          setThreshold(THRESHOLD * Math.sqrt(d/MIN_DISTANCE));
+        }
       }}
     />
   </>);
@@ -68,6 +75,13 @@ function Scene({ setThreshold }: SceneProps) {
 
 function OrbitSystem() {
   const [threshold, setThreshold] = useState(THRESHOLD);
+  const setDistance = useSceneStore(s => s.setDistance);
+
+  const startDistance = MIN_DISTANCE * 1.5;
+
+  useEffect(() => {
+    setDistance(startDistance);
+  }, []);
 
   return (<>
     <Canvas
@@ -77,7 +91,7 @@ function OrbitSystem() {
           Points: { threshold }
         }
       }}
-      camera={{ position: [0, 0, MIN_DISTANCE*1.5] }}
+      camera={{ position: [0, 0, startDistance] }}
     >
       <color attach="background" args={["#111111"]}></color>
       <Scene 
