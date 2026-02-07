@@ -6,6 +6,7 @@
   flex-flow: row nowrap;
 
   overflow: hidden;
+
 }
 
 .left {
@@ -13,13 +14,26 @@
 }
 
 .header-toolbar {
-  height: 30px;
-  min-height: 30px;
+  height: var(--toolbar-height);
+  min-height: var(--toolbar-height);
+
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+
+  img {
+    width: 19px;
+    height: 19px;
+
+    margin-right: 10px;
+  }
+
+  padding: 0 10px;
 }
 
 .footer-toolbar {
-  height: 25px;
-  min-height: 25px;
+  height: var(--footer-height);
+  min-height: var(--footer-height);
 
   display: flex;
   flex-flow: row nowrap;
@@ -32,11 +46,11 @@
 }
 
 .orbit-system {
-  height: calc(100vh - 30px - 25px - 2px);
+  height: calc(100vh - var(--toolbar-height) - var(--footer-height) - 2px);
 }
 
 .right {
   padding: 0 15px;
-  padding-top: 30px;
+  padding-top: var(--toolbar-height);
   width: 33vw;
 }

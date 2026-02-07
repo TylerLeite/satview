@@ -62,3 +62,30 @@ export interface SatDetail {
   dataSrc: string;
   srcURLs: string[];
 };
+
+export interface SatCat {
+  intldes: string; // international designation
+  noradCatId: string;
+  objectType: string;
+  satname: string;
+  country: string;
+  launch: string;
+  site: string;
+  decay: string | null;
+  period: string | null;
+  inclination: string | null;
+  apogee: string | null;
+  perigee: string | null;
+  comment: string | null;
+  commentcode: string | null;
+  rcsvalue: string;
+  rcsSize: string | null;
+  file: string;
+  launchYear: string;
+  launchNum: string;
+  launchPiece: string;
+  current: string;
+  objectName: string;
+  objectId: string;
+  objectNumber: string;
+};

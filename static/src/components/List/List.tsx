@@ -1,30 +1,27 @@
 import './List.css';
 
-import { useQuery } from '@tanstack/react-query';
+import { useSelectedStore } from '../../stores/selected';
 
-import type { SatDetail } from '../Satellites/types';
+import type { SatRec } from '../Satellites/types';
+import use3leQuery from '../../queries/sat3le';
 
-function ListCard(detail: SatDetail) {
+function ListCard(detail: SatRec) {
     return(<>
         <div>
-            {detail.NORAD}
+            {detail.name} ({detail.satnum})
         </div>
     </>);
 }
 
 export default function List() {
-    const { data: satDetails, isLoading, isError } = useQuery<SatDetail[]>({
-        queryKey: ['details'],
-        queryFn: async () => {
-            const res = await fetch('/ucs.json');
-            if (!res.ok) { throw new Error("Error fetching satellite details"); }
-            return res.json();
-        },
-    });
+    const { data: satDetails, isLoading, isError } = use3leQuery();
+    const selectSatellite = useSelectedStore(s => s.select);
 
     if (isLoading || isError) { return; }
 
-    const cards = satDetails?.map((e: SatDetail, i: number) => { return <ListCard key={i} {...e}/>})
+    const cards = satDetails?.map((e: SatRec, i: number) => { 
+        return <span onClick={() => selectSatellite(i)}><ListCard key={i} {...e} /></span>
+    })
 
     return (<>
         <div className="flex-col list">

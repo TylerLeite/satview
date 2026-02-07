@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+import use3leQuery from '../../queries/sat3le.ts';
 import { useGPUSimulation } from './simulate.ts';
-import { useDetailStore } from '../../stores/details.ts';
+import { useSelectedStore } from '../../stores/selected.ts';
 
-import type {SatRec} from './types.d.ts';
 import type { ThreeEvent } from '@react-three/fiber';
 
 type SatellitesProps = {
@@ -22,15 +21,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
 
     const vertexBufferRef = useRef<THREE.BufferAttribute>(null!);
     
-    const { data: satRecs, isLoading, isError } = useQuery<SatRec[]>({
-        queryKey: ['satellites'],
-        queryFn: async () => {
-            const res = await fetch('/satellites.json');
-            if (!res.ok) { throw new Error("Error fetching satellite 3les"); }
-            return res.json();
-        },
-        refetchInterval: 5000,
-    });
+    const { data: satRecs, isLoading, isError } = use3leQuery();
     
     const { positions, step, ready } = useGPUSimulation(satRecs || [], enableGPU, scale, speedMultiplier | 1, vertexBufferRef);
 
@@ -55,7 +46,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
         colors.current = _colors;
     }, [_colors]);
 
-    const selectSatellite = useDetailStore(s => s.select);
+    const selectSatellite = useSelectedStore(s => s.select);
 
     // TODO: As of now, loading happens quickly enough that this is fine
     // TODO: Error state

@@ -6,10 +6,11 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture, OrbitControls } from '@react-three/drei';
 
-import { useDetailStore } from './stores/details';
+import { useSelectedStore } from './stores/selected';
 
 import Satellites from './components/Satellites/Satellites';
 import List from './components/List/List';
+import Detail from './components/Detail/Detail';
 
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -78,19 +79,19 @@ function OrbitSystem() {
   </>);
 }
 
-function Details() {
-  return(<>
-    <p>No data available</p>
-  </>)
-}
-
 function App() {
-  const selected = useDetailStore(s => s.selectedIdx);
+  const selected = useSelectedStore(s => s.selectedIdx);
   
   return (<><QueryClientProvider client={queryClient}>
     <div className="left flex-col">
-      <div className="header-toolbar">
-        <input type="text"></input>
+      <div className="header-toolbar flex-row">
+        <img src="/search.png" />
+        <input 
+          type="text" 
+          placeholder="filter satellites"
+          onFocus={(e) => e.target.placeholder=""}
+          onBlur={(e) => e.target.placeholder="filter satellites"}
+        ></input>
       </div>
 
       <div className="orbit-system"><OrbitSystem></OrbitSystem></div>
@@ -101,7 +102,7 @@ function App() {
     </div>
 
     <div className="right">
-      {selected != -1 ? <Details /> : <List />}
+      {selected != -1 ? <Detail /> : <List />}
     </div>
   </QueryClientProvider></>)
 }
