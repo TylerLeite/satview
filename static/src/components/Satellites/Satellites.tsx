@@ -89,7 +89,11 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
 
     const clickSatellite = (e: ThreeEvent<PointerEvent>) => {
         if (!e) { return; }
-        selectSatellite(typeof e.index == "undefined" ? -1 : e.index);
+        if (typeof e.index == "undefined") {
+            selectSatellite(-1, {x: 0, y: 0, z: 0});
+        } else {
+            selectSatellite(e.index, e.point);
+        }
         // TODO: in hove/unhover logic, make sure it doesnt get unhighlighted if it is selected
     }
 

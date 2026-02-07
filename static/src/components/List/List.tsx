@@ -24,13 +24,14 @@ export default function List() {
 
     if (isLoading || isError) { return; }
 
+    // TODO: get satellite position somehow
     return (<>
         <div className="flex-col list">
             {satDetails?.map((e: SatRec, i: number) => (
                 <span
                     key={e.satnum}
                     className="clickable"
-                    onClick={() => selectSatellite(i)}
+                    onClick={() => selectSatellite(i,{x: 0, y: 0, z: 0})}
                 >
                     <ListCard search={search_lower} {...e} />
                 </span>

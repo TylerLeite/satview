@@ -162,7 +162,6 @@ export function useGPUSimulation(
                 gpuRef.current.satBuf.destroy();
                 gpuRef.current.uniformBuf.destroy();
                 gpuRef.current.stagingPool.forEach(buf => buf.destroy());
-                // gpuRef.current.computeOutputBuf.destroy();
                 gpuRef.current = null;
             }
         };
@@ -194,7 +193,6 @@ export function useGPUSimulation(
         );
         
         gpu.device.queue.submit([commandEncoder.finish()]);
-        // await computeOutputBuf.mapAsync(GPUMapMode.READ);
 
         computeOutputBuf.mapAsync(GPUMapMode.READ).then(() => {
             const res = new Float32Array(computeOutputBuf.getMappedRange()).slice();

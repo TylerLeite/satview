@@ -12,6 +12,7 @@ import { useSceneStore } from './stores/scene';
 import { useFilterStore } from './stores/filter';
 
 import Satellites from './components/Satellites/Satellites';
+import Splosion from './components/Splosion/Splosion';
 import List from './components/List/List';
 import Detail from './components/Detail/Detail';
 
@@ -34,7 +35,6 @@ function Scene({ setThreshold }: SceneProps) {
 
   const speedMultiplier = useSceneStore(s => s.speedMultiplier);
 
-  // NOTE: a day is long, this rotation will hardly be noticeable. but it makes me feel better to include it
   const earthRef = useRef<THREE.Mesh>(null!);
   useFrame((_, delta) => {
     const speed = Math.PI*2/(24*60*60) // rad / s
@@ -81,7 +81,7 @@ function OrbitSystem() {
 
   useEffect(() => {
     setDistance(startDistance);
-  }, []);
+  }, [setDistance, startDistance]);
 
   return (<>
     <Canvas
@@ -97,6 +97,7 @@ function OrbitSystem() {
       <Scene 
         setThreshold={setThreshold}
       />
+      <Splosion />
     </Canvas>
   </>);
 }
@@ -156,7 +157,7 @@ function App() {
       <Footer /> 
     </div>
 
-    <div className="right">
+    <div className="right flex flex-col">
       {selected != -1 ? <Detail /> : <List />}
     </div>
   </QueryClientProvider></>);
