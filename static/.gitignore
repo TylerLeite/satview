@@ -27,3 +27,4 @@ dist-ssr
 
 public/ucs.json
 public/satellites.json
+public/satcat.json
