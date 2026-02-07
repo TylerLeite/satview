@@ -88,7 +88,7 @@ export default function Detail() {
     }
 
     return (<>
-        <p style={{marginBottom: "25px"}} onClick={() => selectSatellite(-1)}>&lt; Back to list</p>
+        <p className="clickable" style={{marginBottom: "25px"}} onClick={() => selectSatellite(-1)}>&lt; Back to list</p>
         { detailCard }
     </>)
 }

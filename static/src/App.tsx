@@ -9,6 +9,7 @@ import { useTexture, OrbitControls } from '@react-three/drei';
 import use3leQuery from './queries/sat3le';
 import { useSelectedStore } from './stores/selected';
 import { useSceneStore } from './stores/scene';
+import { useFilterStore } from './stores/filter';
 
 import Satellites from './components/Satellites/Satellites';
 import List from './components/List/List';
@@ -119,6 +120,7 @@ function Footer() {
 
 function App() {
   const selected = useSelectedStore(s => s.selectedIdx);
+  const setSearch = useFilterStore(s => s.setSearch);
   
   return (<><QueryClientProvider client={queryClient}>
     <div className="left flex-col">
@@ -129,6 +131,7 @@ function App() {
           placeholder="filter satellites"
           onFocus={(e) => e.target.placeholder=""}
           onBlur={(e) => e.target.placeholder="filter satellites"}
+          onChange={(e) => setSearch(e.target.value)}
         ></input>
       </div>
 
