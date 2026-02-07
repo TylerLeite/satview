@@ -6,7 +6,9 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture, OrbitControls } from '@react-three/drei';
 
+import use3leQuery from './queries/sat3le';
 import { useSelectedStore } from './stores/selected';
+import { useSceneStore } from './stores/scene';
 
 import Satellites from './components/Satellites/Satellites';
 import List from './components/List/List';
@@ -25,10 +27,11 @@ const THRESHOLD = 0.02;
 
 type SceneProps = {
   setThreshold: Dispatch<SetStateAction<number>>;
-  speedMultiplier: number
-}
-function Scene({ setThreshold, speedMultiplier }: SceneProps) {
+};
+function Scene({ setThreshold }: SceneProps) {
   const texture = useTexture('/earth.png');
+
+  const speedMultiplier = useSceneStore(s => s.speedMultiplier);
 
   // NOTE: a day is long, this rotation will hardly be noticeable. but it makes me feel better to include it
   const earthRef = useRef<THREE.Mesh>(null!);
@@ -36,7 +39,9 @@ function Scene({ setThreshold, speedMultiplier }: SceneProps) {
     const speed = Math.PI*2/(24*60*60) // rad / s
     earthRef.current.rotation.y += speed * delta * speedMultiplier;
   });
-  
+
+  const setDistance = useSceneStore(s => s.setDistance);
+
   return (<>
     <ambientLight intensity={0.5} />
     <pointLight position={[10, 10, 10]} />
@@ -45,7 +50,7 @@ function Scene({ setThreshold, speedMultiplier }: SceneProps) {
         <sphereGeometry args={[EARTH_RADIUS_VIRTUAL, 64, 64]} />
         <meshStandardMaterial map={texture} />
       </mesh>
-      <Satellites scale={SCALE} speedMultiplier={speedMultiplier}></Satellites>
+      <Satellites scale={SCALE} speedMultiplier={speedMultiplier} />
     </group>
     <OrbitControls
       minDistance={MIN_DISTANCE}
@@ -53,15 +58,15 @@ function Scene({ setThreshold, speedMultiplier }: SceneProps) {
       onChange={(e) => {
         const d = e?.target.getDistance();
         if (!d) { return; }
+        setDistance(d);
         setThreshold(THRESHOLD * Math.sqrt(d/MIN_DISTANCE));
       }}
-      />
+    />
   </>);
 }
 
 function OrbitSystem() {
   const [threshold, setThreshold] = useState(THRESHOLD);
-  const speedMultiplier = 1;
 
   return (<>
     <Canvas
@@ -74,8 +79,41 @@ function OrbitSystem() {
       camera={{ position: [0, 0, MIN_DISTANCE*1.5] }}
     >
       <color attach="background" args={["#111111"]}></color>
-      <Scene setThreshold={setThreshold} speedMultiplier={speedMultiplier}></Scene>
+      <Scene 
+        setThreshold={setThreshold}
+      />
     </Canvas>
+  </>);
+}
+
+// type FooterProps = {
+// };
+function Footer() {
+  const distance = useSceneStore(s => s.distance);
+  const {data: tles} = use3leQuery();
+
+  const speedMultiplier = useSceneStore(s => s.speedMultiplier);
+  const setSpeedMultiplier = useSceneStore(s => s.setSpeedMultiplier);
+
+  let nSats = 0;
+  if (tles) {
+    nSats = tles.length;
+  }
+  
+  return (<>
+    <div className="footer-toolbar flex flex-row items-center justify-around">
+      <p>{nSats} Satellites</p>
+      <span className="speed-controls flex flex-row">
+        <p>Speed:</p>
+        <p className={`clickable ${speedMultiplier == 1 ? "green" : ""}`} onClick={() => setSpeedMultiplier(1)}>1x</p>
+        <p className={`clickable ${speedMultiplier == 10 ? "green" : ""}`} onClick={() => setSpeedMultiplier(10)}>10x</p>
+        <p className={`clickable ${speedMultiplier == 100 ? "green" : ""}`} onClick={() => setSpeedMultiplier(100)}>100x</p>
+        <p className={`clickable ${speedMultiplier == 1000 ? "green" : ""}`} onClick={() => setSpeedMultiplier(1000)}>1,000x</p>
+        <p className={`clickable ${speedMultiplier == 10000 ? "green" : ""}`} onClick={() => setSpeedMultiplier(10000)}>10,000x</p>
+        <p className={`clickable ${speedMultiplier == 100000 ? "green" : ""}`} onClick={() => setSpeedMultiplier(100000)}>100,000x</p>
+      </span>
+      <p>Distance from Earth: {Math.floor(distance / SCALE - EARTH_RADIUS_ACTUAL)}km</p>
+    </div>
   </>);
 }
 
@@ -84,7 +122,7 @@ function App() {
   
   return (<><QueryClientProvider client={queryClient}>
     <div className="left flex-col">
-      <div className="header-toolbar flex-row">
+      <div className="header-toolbar flex flex-row items-center">
         <img src="/search.png" />
         <input 
           type="text" 
@@ -94,17 +132,17 @@ function App() {
         ></input>
       </div>
 
-      <div className="orbit-system"><OrbitSystem></OrbitSystem></div>
+      <div className="orbit-system">
+        <OrbitSystem />
+        </div>
 
-      <div className="footer-toolbar">
-        <p>31222 Satellites | Speed <span style={{ color: "#19f705"}}>1x</span> 10x 100x 1,000x 10,000x 100,000x | Distance from Earth: 9823m</p>
-      </div>
+      <Footer /> 
     </div>
 
     <div className="right">
       {selected != -1 ? <Detail /> : <List />}
     </div>
-  </QueryClientProvider></>)
+  </QueryClientProvider></>);
 }
 
 export default App;

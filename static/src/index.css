@@ -32,5 +32,19 @@ img {
   -moz-osx-font-smoothing: none;
 
   --toolbar-height: 45px;
-  --footer-height: 25px;
+  --footer-height: 30px;
+
+  --green: #19f705;
+}
+
+.green {
+  color: var(--green);
+}
+
+.clickable {
+  cursor: pointer;
+
+  &:hover {
+    color: var(--green);
+  }
 }

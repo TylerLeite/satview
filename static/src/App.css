@@ -6,7 +6,6 @@
   flex-flow: row nowrap;
 
   overflow: hidden;
-
 }
 
 .left {
@@ -16,10 +15,6 @@
 .header-toolbar {
   height: var(--toolbar-height);
   min-height: var(--toolbar-height);
-
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
 
   img {
     width: 19px;
@@ -35,14 +30,16 @@
   height: var(--footer-height);
   min-height: var(--footer-height);
 
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  justify-content: flex-end;
   font-size: 12px;
   padding: 0 15px;
 
   background-color: #111;
+
+  .speed-controls {
+    p {
+      padding: 0 5px;
+    }
+  }
 }
 
 .orbit-system {
