@@ -6,8 +6,10 @@ import use3leQuery from '../../queries/sat3le.ts';
 import { useGPUSimulation } from './simulate.ts';
 import { useSelectedStore } from '../../stores/selected.ts';
 import { useSplosionStore } from '../../stores/splosion.ts';
+import { useFilterStore } from '../../stores/filter.ts';
 
 import type { ThreeEvent } from '@react-three/fiber';
+import type { SatRec } from './types';
 
 type SatellitesProps = {
     scale: number;
@@ -31,7 +33,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
         step(delta);
     });
 
-    const hoveredRef = useRef<THREE.BufferAttribute>(null!);
+    const colorBufferRef = useRef<THREE.BufferAttribute>(null!);
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
     const _colors = useMemo(() => {
@@ -49,11 +51,11 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
 
     const splodedSatellites = useSplosionStore(s => s.splodedSatellites);
     useEffect(() => {
-        if (!hoveredRef.current) { return; }
+        if (!colorBufferRef.current) { return; }
         for (const idx of splodedSatellites.keys()) {
             colors.current[idx * 4 + 3] = 0;
         }
-        hoveredRef.current.needsUpdate = true;
+        colorBufferRef.current.needsUpdate = true;
     }, [splodedSatellites])
 
     const selectSatellite = useSelectedStore(s => s.select);
@@ -62,16 +64,41 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
     const setSploded = useSplosionStore(s => s.setSploded);
     const splodeMode = useSplosionStore(s => s.splodeMode);
 
+    const searchFilter = useFilterStore(s => s.search);
+
+    useEffect(() => {
+        if (!colorBufferRef.current) { return; }
+        const search_lower = searchFilter.toLocaleLowerCase();
+
+        satRecs?.forEach((e: SatRec, idx: number) => {
+            const i = idx*4;
+            if (e.name.toLocaleLowerCase().includes(search_lower)) {
+                console.log(e);
+                colors.current[i + 3] = 1;
+            } else {
+                colors.current[i + 3] = 0;
+            }
+        });
+
+        colorBufferRef.current.needsUpdate = true;
+    }, [searchFilter, satRecs]);
+
     // TODO: As of now, loading happens quickly enough that this is fine
     // TODO: Error state
     if (isLoading || isError || !positions ) {return null}
 
     const updateHover = (e: ThreeEvent<PointerEvent>) => {
-        document.body.style.cursor = 'pointer';
-        e.stopPropagation();
-
         if (e.index == null) { return; }
-
+        
+        const search_lower = searchFilter.toLocaleLowerCase()
+        if (!satRecs || !satRecs[e.index].name.toLocaleLowerCase().includes(search_lower)) {
+            setHoveredIdx(null);
+            return;
+        }
+        
+        e.stopPropagation();
+        document.body.style.cursor = 'pointer';
+        
         if (e.index != hoveredIdx) {
             if (hoveredIdx !== null) {
                 colors.current[hoveredIdx * 4] = 1;
@@ -85,7 +112,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
             colors.current[e.index * 4 + 1] = 0;
             colors.current[e.index * 4 + 2] = 0;
 
-            hoveredRef.current.needsUpdate = true;
+            colorBufferRef.current.needsUpdate = true;
         }
     }
 
@@ -96,16 +123,24 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
         colors.current[e.index * 4] = 1;
         colors.current[e.index * 4 + 1] = 1;
         colors.current[e.index * 4 + 2] = 1;
-        hoveredRef.current.needsUpdate = true;
+        colorBufferRef.current.needsUpdate = true;
 
         setHoveredIdx(null);
     }
 
     const clickSatellite = (e: ThreeEvent<PointerEvent>) => {
         if (!e) { return; }
+
         if (typeof e.index == "undefined") {
             selectSatellite(-1, {x: 0, y: 0, z: 0});
         } else {
+            const search_lower = searchFilter.toLocaleLowerCase()
+            if (!satRecs || !satRecs[e.index].name.toLocaleLowerCase().includes(search_lower)) {
+                return;
+            }
+
+            e.stopPropagation();
+
             if (splodeMode) {
                 resetSplosion(e.point.x, e.point.y, e.point.z);
                 setSploded(e.index);
@@ -115,7 +150,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
         }
         // TODO: in hover/unhover logic, make sure it doesnt get unhighlighted if it is selected
     }
-    
+
     return (
         <points
             onPointerMove={updateHover}
@@ -131,7 +166,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
                     usage={THREE.DynamicDrawUsage}
                 ></bufferAttribute>
                 <bufferAttribute
-                    ref={hoveredRef}
+                    ref={colorBufferRef}
                     attach="attributes-color"
                     count={_colors.length / 4}
                     args={[_colors, 4]}

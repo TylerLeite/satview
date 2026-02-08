@@ -33,7 +33,7 @@ export function useGPUSimulation(
     const [positions, setPositions] = useState<Float32Array | null>(null);
     const gpuRef = useRef<GPURef | null>(null);
 
-    const [mounted, setMounted] = useState<boolean>(true);
+    const [mounted] = useState<boolean>(true);
     
     const [ready, setReady] = useState<boolean>(false);
 
@@ -153,23 +153,25 @@ export function useGPUSimulation(
         }
 
         initGPU();
-
-        return () => {
-            setMounted(false);
-            if (gpuRef.current) {
-                gpuRef.current.satBuf.destroy();
-                gpuRef.current.uniformBuf.destroy();
-                gpuRef.current.stagingPool.forEach(buf => buf.destroy());
-                gpuRef.current = null;
-            }
-        };
     }, [satellites, mounted, enabled]);
+
+    // function cleanup() {
+    //     console.log("Unmounting...")
+    //     setMounted(false);
+    //     if (gpuRef.current) {
+    //         gpuRef.current.satBuf.destroy();
+    //         gpuRef.current.uniformBuf.destroy();
+    //         gpuRef.current.stagingPool.forEach(buf => buf.destroy());
+    //         gpuRef.current = null;
+    //     }
+    // };
 
     const step = async(dt: number) => {
         const gpu = gpuRef.current;
         if (!gpu || isComputing) { 
+            if (!gpu) { console.error(`Broken gpuRef in simulate.step(): ${mounted ? 'mounted' : 'not mounted'}`) }
             if (isComputing) { console.warn("Skipped a simulate frame"); }
-            
+
             return; 
         }
         
