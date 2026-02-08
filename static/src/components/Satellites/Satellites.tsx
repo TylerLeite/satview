@@ -143,7 +143,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
 
             if (splodeMode) {
                 resetSplosion(e.point.x, e.point.y, e.point.z);
-                setSploded(e.index);
+                setSploded(e.index, satRecs[e.index].satnum);
             } else {
                 selectSatellite(e.index, e.point);
             }

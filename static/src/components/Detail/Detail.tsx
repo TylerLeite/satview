@@ -1,7 +1,11 @@
+import "./Detail.css";
+
+import { useMemo } from 'react';
 import { useFocusedSatellite, useSelectedStore } from '../../stores/selected.ts';
 import { useDetailsQuery } from '../../queries/satDetail.ts';
 import use3leQuery from '../../queries/sat3le.ts';
 import { useSatCatQuery } from '../../queries/satCat.ts';
+import { useSplosionStore } from '../../stores/splosion.ts';
 
 export default function Detail() {
     const selectSatellite = useSelectedStore(s => s.select);
@@ -12,6 +16,12 @@ export default function Detail() {
     const {data: satCat} = useSatCatQuery();
     
     const tle = tles?.[focusedSatelliteIdx];
+
+    const splodedSatellites = useSplosionStore(s => s.splodedSatellites);
+    const isSploded = useMemo<boolean>(() => {
+        if (!tle) { return false; }
+        return Array.from(splodedSatellites.values()).includes(tle.satnum);
+    }, [splodedSatellites, tle]);
 
     if (!tle || !allDetails || !satCat) { return; }
 
@@ -97,5 +107,7 @@ export default function Detail() {
         </p>
 
         { detailCard }
+
+        {isSploded && <p className="splode-message">You asploded this one.</p>}
     </>)
 }

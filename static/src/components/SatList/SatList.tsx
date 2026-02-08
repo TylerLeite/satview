@@ -11,6 +11,7 @@ import use3leQuery from '../../queries/sat3le';
 
 import type { RowComponentProps } from 'react-window';
 import type { SatRec } from '../Satellites/types';
+import { useSplosionStore } from '../../stores/splosion';
 
 const ListCard = memo(
     ({name, satnum}: SatRec) => 
@@ -30,10 +31,16 @@ function RowComponent({
 }>) {
     const e = filtered[index];
 
+    const splodedSatellites = useSplosionStore(s => s.splodedSatellites);
+    const isSploded = useMemo<boolean>(() => {
+        return Array.from(splodedSatellites.values()).includes(e.satnum);
+    }, [splodedSatellites, e.satnum]);
+
     return (
         <div style={style}>
             <span 
                 className="clickable"
+                style={{color: isSploded ? "#999" : "#FFF"}}
                 onClick={() => selectSatellite(index, {x: 0, y: 0, z: 0})}
             >
                 <ListCard {...e} />

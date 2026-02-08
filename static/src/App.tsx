@@ -112,9 +112,12 @@ function Footer() {
   const speedMultiplier = useSceneStore(s => s.speedMultiplier);
   const setSpeedMultiplier = useSceneStore(s => s.setSpeedMultiplier);
 
+  const splodedSatellites = useSplosionStore(s => s.splodedSatellites);
+
   let nSats = 0;
   if (tles) {
     nSats = tles.length;
+    nSats -= splodedSatellites.size;
   }
   
   return (<>
