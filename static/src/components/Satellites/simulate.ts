@@ -6,8 +6,9 @@ import orbitShaderCode from '../../shaders/orbit.wgsl?raw';
 
 import type { RefObject } from 'react';
 import type { SatRec } from './types.d.ts';
+// import { useSatellitePositionStore } from '../../stores/satellitePositions.ts';
 
-const STAGING_POOL_SZ = 3;
+const STAGING_POOL_SZ = 5;
 
 interface GPURef {
     device: GPUDevice;
@@ -27,6 +28,8 @@ export function useGPUSimulation(
     speedMultiplier: number,
     vertexBufferRef: RefObject<THREE.BufferAttribute>,
 ) {
+    // const positions = useSatellitePositionStore(s => s.positions)
+    // const setPositions = useSatellitePositionStore(s => s.positions)
     const [positions, setPositions] = useState<Float32Array | null>(null);
     const gpuRef = useRef<GPURef | null>(null);
 
@@ -103,11 +106,6 @@ export function useGPUSimulation(
                 })
             );
 
-            // const computeOutputBuf = device.createBuffer({
-            //     size: satData.byteLength,
-            //     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-            // });
-
             const pipeline = device.createComputePipeline({
                 layout: 'auto',
                 compute: {
@@ -169,7 +167,11 @@ export function useGPUSimulation(
 
     const step = async(dt: number) => {
         const gpu = gpuRef.current;
-        if (!gpu || isComputing) { return; }
+        if (!gpu || isComputing) { 
+            if (isComputing) { console.warn("Skipped a simulate frame"); }
+            
+            return; 
+        }
         
         setIsComputing(true);
 

@@ -16,11 +16,16 @@
   height: var(--toolbar-height);
   min-height: var(--toolbar-height);
 
-  img {
+  .search-icon {
     width: 19px;
     height: 19px;
 
     margin-right: 10px;
+  }
+
+  .bomb-icon {
+    width: 19px;
+    height: 19px;
   }
 
   padding: 0 10px;
@@ -48,6 +53,6 @@
 
 .right {
   padding: 0 15px;
-  padding-top: var(--toolbar-height);
+  padding-top: 17px;
   width: 33vw;
 }

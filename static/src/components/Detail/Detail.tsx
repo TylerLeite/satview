@@ -1,12 +1,7 @@
-import './Detail.css'
-
-import { useMemo } from 'react';
-
 import { useFocusedSatellite, useSelectedStore } from '../../stores/selected.ts';
 import { useDetailsQuery } from '../../queries/satDetail.ts';
 import use3leQuery from '../../queries/sat3le.ts';
 import { useSatCatQuery } from '../../queries/satCat.ts';
-import { useSplosionStore } from '../../stores/splosion.ts';
 
 export default function Detail() {
     const selectSatellite = useSelectedStore(s => s.select);
@@ -17,15 +12,6 @@ export default function Detail() {
     const {data: satCat} = useSatCatQuery();
     
     const tle = tles?.[focusedSatelliteIdx];
-
-    const X = useSelectedStore(s => s.X);
-    const Y = useSelectedStore(s => s.Y);
-    const Z = useSelectedStore(s => s.Z);
-
-    const splodable = useMemo<boolean>(() => X != 0 && Y != 0 && Z!= 0, [X, Y, Z]);
-
-    const resetSplosion = useSplosionStore(s => s.reset);
-
 
     if (!tle || !allDetails || !satCat) { return; }
 
@@ -100,10 +86,6 @@ export default function Detail() {
             </div>
         )
     }
-    
-    const splode = function() {
-        resetSplosion(X, Y, Z);
-    }
 
     return (<>
         <p 
@@ -115,13 +97,5 @@ export default function Detail() {
         </p>
 
         { detailCard }
-        
-        <img 
-            className={`bomb-icon ${splodable ? 'clickable' : 'hidden'}`}
-            src="/bomb.png"
-            onClick={() => splode()}
-            onMouseOver={(e) => (e.target as HTMLImageElement).src = "/bomb-red.png"}
-            onMouseOut={(e) => (e.target as HTMLImageElement).src = "/bomb.png"}
-        />
     </>)
 }

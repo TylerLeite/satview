@@ -1,6 +1,6 @@
 import './App.css';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -13,10 +13,11 @@ import { useFilterStore } from './stores/filter';
 
 import Satellites from './components/Satellites/Satellites';
 import Splosion from './components/Splosion/Splosion';
-import List from './components/List/List';
+import SatList from './components/SatList/SatList';
 import Detail from './components/Detail/Detail';
 
 import type { Dispatch, SetStateAction } from 'react';
+import { useSplosionStore } from './stores/splosion';
 
 const queryClient = new QueryClient();
 
@@ -136,18 +137,40 @@ function Footer() {
 function App() {
   const selected = useSelectedStore(s => s.selectedIdx);
   const setSearch = useFilterStore(s => s.setSearch);
-  
+
+  const splodable = true;
+  const setSplodeMode = useSplosionStore(s => s.setSplodeMode);
+  const splodeMode = useSplosionStore(s => s.splodeMode);
+
+  const [bombHovered, setBombHovered] = useState<boolean>(false);
+
+  const bombIconSrc = useMemo(() => {
+    if (splodeMode || bombHovered) {
+      return "/bomb-red.png";
+    } else {
+      return "/bomb.png"
+    }
+  }, [splodeMode, bombHovered]);
+
   return (<><QueryClientProvider client={queryClient}>
     <div className="left flex-col">
       <div className="header-toolbar flex flex-row items-center">
-        <img src="/search.png" />
+        <img className="search-icon" src="/search.png" />
         <input 
+        className="grow"
           type="text" 
           placeholder="filter satellites"
           onFocus={(e) => e.target.placeholder=""}
           onBlur={(e) => e.target.placeholder="filter satellites"}
           onChange={(e) => setSearch(e.target.value)}
         ></input>
+        <img
+          className={`bomb-icon ${splodable ? 'clickable' : 'hidden'}`}
+          src={bombIconSrc}
+          onClick={() => setSplodeMode(!splodeMode)}
+          onMouseOver={() => setBombHovered(true)}
+          onMouseOut={() => setBombHovered(false)}
+        />
       </div>
 
       <div className="orbit-system">
@@ -158,7 +181,7 @@ function App() {
     </div>
 
     <div className="right flex flex-col">
-      {selected != -1 ? <Detail /> : <List />}
+      {selected != -1 ? <Detail /> : <SatList />}
     </div>
   </QueryClientProvider></>);
 }

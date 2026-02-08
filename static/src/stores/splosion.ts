@@ -12,11 +12,17 @@ interface SplosionState {
     };
     life: number;
     lifespan: number;
+
+    splodeMode: boolean;
+
+    splodedSatellites: Map<number, boolean>;
 };
 
 interface SplosionAction {
     reset: (X: number, Y: number, Z: number) => void;
-    tick: () => void
+    tick: () => void;
+    setSploded: (idx: number) => void;
+    setSplodeMode: (to: boolean) => void;
 }
 
 const useSplosionStore = create<SplosionState & SplosionAction>(
@@ -29,8 +35,16 @@ const useSplosionStore = create<SplosionState & SplosionAction>(
         },
         life: 0,
         lifespan: LIFESPAN,
+        splodedSatellites: new Map<number, boolean>(),
+        splodeMode: false,
         reset: (X: number, Y: number, Z: number) => set(() => ({ r: { X, Y, Z }, life: LIFESPAN })),
-        tick: () => set((s) => ({ life: s.life - 1 })) 
+        tick: () => set((s) => ({ life: s.life - 1 })),
+        setSploded: (idx: number) => set((s) => {
+            const newSploded = new Map<number, boolean>(s.splodedSatellites);
+            newSploded.set(idx, true);
+            return { splodedSatellites: newSploded };
+        }),
+        setSplodeMode: (to: boolean) => set(() => ({splodeMode: to})),
     })
 );
 
