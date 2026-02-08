@@ -7,6 +7,8 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture, OrbitControls } from '@react-three/drei';
 
 import use3leQuery from './queries/sat3le';
+import { useDetailsQuery } from './queries/satDetail';
+import { useSatCatQuery } from './queries/satCat';
 import { useSelectedStore } from './stores/selected';
 import { useSceneStore } from './stores/scene';
 import { useFilterStore } from './stores/filter';
@@ -106,6 +108,10 @@ function OrbitSystem() {
 function Footer() {
   const distance = useSceneStore(s => s.distance);
   const {data: tles} = use3leQuery();
+
+  // Preload detail data
+  useSatCatQuery();
+  useDetailsQuery();
 
   const speedMultiplier = useSceneStore(s => s.speedMultiplier);
   const setSpeedMultiplier = useSceneStore(s => s.setSpeedMultiplier);

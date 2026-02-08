@@ -48,6 +48,7 @@ export default function SatList() {
             return(
                 <ListCard 
                     name={e.name}
+                    key={e.satnum}
                     satnum={e.satnum}
                     isSploded={isSploded(e.satnum)}
                     idx={idx}
