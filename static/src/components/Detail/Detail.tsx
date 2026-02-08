@@ -17,10 +17,10 @@ export default function Detail() {
     
     const tle = tles?.[focusedSatelliteIdx];
 
-    const splodedSatellites = useSplosionStore(s => s.splodedSatellites);
+    const splodedSatellites = useSplosionStore(s => s.splodedSatellites_rev);
     const isSploded = useMemo<boolean>(() => {
         if (!tle) { return false; }
-        return Array.from(splodedSatellites.values()).includes(tle.satnum);
+        return splodedSatellites.has(tle.satnum);
     }, [splodedSatellites, tle]);
 
     if (!tle || !allDetails || !satCat) { return; }

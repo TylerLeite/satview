@@ -11,7 +11,7 @@ interface FilterAction {
 const useFilterStore = create<FilterState & FilterAction>(
     (set) => ({
         search: "",
-        setSearch: (s: string) => set(() => ({ search: s })), 
+        setSearch: (s: string) => set(() => ({ search: s.toLocaleUpperCase() })), 
     })
 );
 

@@ -66,22 +66,25 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
 
     const searchFilter = useFilterStore(s => s.search);
 
+    const splodedSatellites_rev = useSplosionStore(s => s.splodedSatellites_rev);
     useEffect(() => {
         if (!colorBufferRef.current) { return; }
-        const search_lower = searchFilter.toLocaleLowerCase();
 
         satRecs?.forEach((e: SatRec, idx: number) => {
             const i = idx*4;
-            if (e.name.toLocaleLowerCase().includes(search_lower)) {
-                console.log(e);
-                colors.current[i + 3] = 1;
+            if (e.name.includes(searchFilter)) {
+                if (splodedSatellites_rev.has(e.satnum)) {
+                    colors.current[i + 3] = 0;
+                } else {
+                    colors.current[i + 3] = 1;
+                }
             } else {
                 colors.current[i + 3] = 0;
             }
         });
 
         colorBufferRef.current.needsUpdate = true;
-    }, [searchFilter, satRecs]);
+    }, [searchFilter, satRecs, splodedSatellites_rev]);
 
     // TODO: As of now, loading happens quickly enough that this is fine
     // TODO: Error state
@@ -90,8 +93,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
     const updateHover = (e: ThreeEvent<PointerEvent>) => {
         if (e.index == null) { return; }
         
-        const search_lower = searchFilter.toLocaleLowerCase()
-        if (!satRecs || !satRecs[e.index].name.toLocaleLowerCase().includes(search_lower)) {
+        if (!satRecs || !satRecs[e.index].name.includes(searchFilter)) {
             setHoveredIdx(null);
             return;
         }
@@ -134,8 +136,7 @@ function Satellites({ scale, enableGPU, speedMultiplier }: SatellitesProps) {
         if (typeof e.index == "undefined") {
             selectSatellite(-1, {x: 0, y: 0, z: 0});
         } else {
-            const search_lower = searchFilter.toLocaleLowerCase()
-            if (!satRecs || !satRecs[e.index].name.toLocaleLowerCase().includes(search_lower)) {
+            if (!satRecs || !satRecs[e.index].name.includes(searchFilter)) {
                 return;
             }
 

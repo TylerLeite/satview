@@ -103,8 +103,6 @@ function OrbitSystem() {
   </>);
 }
 
-// type FooterProps = {
-// };
 function Footer() {
   const distance = useSceneStore(s => s.distance);
   const {data: tles} = use3leQuery();
@@ -141,6 +139,16 @@ function App() {
   const selected = useSelectedStore(s => s.selectedIdx);
   const setSearch = useFilterStore(s => s.setSearch);
 
+  const[_search, set_Search] = useState('');
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      setSearch(_search);
+    }, 150);
+
+    return () => clearTimeout(debounce);
+  }, [_search, set_Search, setSearch]);
+
+
   const splodable = true;
   const setSplodeMode = useSplosionStore(s => s.setSplodeMode);
   const splodeMode = useSplosionStore(s => s.splodeMode);
@@ -163,9 +171,10 @@ function App() {
         className="grow"
           type="text" 
           placeholder="filter satellites"
+          value={_search}
           onFocus={(e) => e.target.placeholder=""}
           onBlur={(e) => e.target.placeholder="filter satellites"}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => set_Search(e.target.value)}
         ></input>
         <img
           className={`bomb-icon ${splodable ? 'clickable' : 'hidden'}`}
